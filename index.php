@@ -3,9 +3,38 @@ require_once 'connect/db_connect.php';
 require_once 'Classes/PHPExcel.php';
 
 if (isset($_POST['btnSubmit'])) {
-	$file = $_FILE['file']['tmp_name'];
-	echo $file;
-	echo 'string';
+    $file = $_FILES['file']['tmp_name'];
+
+    $objReader = PHPExcel_IOFactory::createReaderForFile($file);
+    $objReader->setLoadSheetsOnly('10A1');
+
+    $objExcel = $objReader->load($file);
+    $sheetData = $objExcel->getActiveSheet()->toArray('null', true, true, true);
+    $getHighestRow = $objExcel->setActiveSheetIndex()->getHighestRow();
+
+    $conn = connection();
+    for($row = 2; $row <= $getHighestRow; $row++) {
+        $class_id = 1;
+        $name = $sheetData[$row]['A'];
+        $toan = $sheetData[$row]['B'];
+        $ly = $sheetData[$row]['C'];
+        $hoa = $sheetData[$row]['D'];
+
+        // insert to db
+        $sql = "INSERT INTO point(class_id, hoten, toan, ly, hoa) VALUES (:class_id, :hoten, :toan, :ly, :hoa)";
+        $stmt = $conn->prepare($sql);
+        if ($stmt) {
+            $stmt->bindPARAM(":class_id", $class_id, PDO::PARAM_INT);
+            $stmt->bindPARAM(":hoten", $name, PDO::PARAM_STR);
+            $stmt->bindPARAM(":toan", $toan, PDO::PARAM_INT);
+            $stmt->bindPARAM(":ly", $ly, PDO::PARAM_INT);
+            $stmt->bindPARAM(":hoa", $hoa, PDO::PARAM_INT);
+            $stmt->execute();
+            $stmt->closeCursor();
+        }
+    }
+    disconnection($conn);
+    echo "Insert success";
 }
 ?>
 <!DOCTYPE html>
