@@ -15,6 +15,10 @@ if (isset($_POST['btnSubmit'])) {
     $sheet->setCellValue('C'.$rowCount, 'Ly');
     $sheet->setCellValue('D'.$rowCount, 'Hoa');
 
+    $sheet->getColumnDimension("A")->setAutoSize(true);
+    $sheet->getStyle('A1:D1')->getAlignment()->setHorizontal(PHPExcel_Style_Alignment::HORIZONTAL_CENTER);
+    $sheet->getStyle('A1:D1')->getFill()->setFillType(\PHPExcel_Style_Fill::FILL_SOLID)->getStartColor()->setARGB('00ffff00');
+
     // get data from db
     $conn = connection();
     $data = array();
@@ -37,6 +41,21 @@ if (isset($_POST['btnSubmit'])) {
         $sheet->setCellValue('C'.$rowCount, $value['ly']);
         $sheet->setCellValue('D'.$rowCount, $value['hoa']);
     }
+    // tinh diem trung binh
+    $sheet->setCellValue('B'.($rowCount+1), "=AVERAGE(B2:B$rowCount)");
+    $sheet->setCellValue('C'.($rowCount+1), "=AVERAGE(C2:C$rowCount)");
+    $sheet->setCellValue('D'.($rowCount+1), "=AVERAGE(D2:D$rowCount)");
+    $sheet->setCellValue('A'.($rowCount+1), "DTB:");
+
+    $sheet->getStyle('A'.($rowCount + 1))->getFont()->setBold(true);
+    $styleArray = array(
+        'borders' => array(
+            'allborders' => array(
+                'style' => PHPExcel_Style_Border::BORDER_THIN
+            )
+        )
+    );
+    $sheet->getStyle('A1:' . 'D'.($rowCount))->applyFromArray($styleArray);
 
     $objWriter = new PHPExcel_Writer_Excel2007($objExcel);
     $filename = "export.xlsx";
